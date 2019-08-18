@@ -2,7 +2,7 @@
 Create map/game data for goby projects, inspired by the issue: https://github.com/nskins/goby/issues/82 
 
 ## Requirements
-\>= Python 3.6
+\>= Python 3.6  
 Tkinter (apt install python-tk if running it doesn't work immediately)
 
 ## Making Changes
@@ -13,9 +13,9 @@ This program works by reading all the member values of any given class (from my 
 I am trying to force static typing in this project, since each class has its own data types, and keeping track of what data type goes where is a royal pain with dynamic typing.  Hence why we need Python 3.6 or up.
 
 ## Roadmap
-[x] Groundwork (base app, basic text fields, etc)
-[ ] Export data to JSON or YAML (YAML would be preferred)
-[ ] Contextual form fields (dropdown for custom game objects, textfield for others)
-[ ] Form field validation
-[ ] Support for Item game object
-[ ] Support for Event game object
+- [x] Groundwork (base app, basic text fields, etc)  
+- [ ] Export data to JSON or YAML (YAML would be preferred)  
+- [ ] Contextual form fields (dropdown for custom game objects, textfield for others)  
+- [ ] Form field validation  
+- [ ] Support for Item game object  
+- [ ] Support for Event game object  
