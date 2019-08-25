@@ -1,20 +1,25 @@
 import sys, inspect
-from typing import List
+from typing import List, Dict
 
 class Object:
     '''The generic class from which all other game objects inherit'''
     def __str__(self):
         to_str : str = ""
         keys = get_members(self.__class__.__name__)
+        x = 0
         for k in keys:
-            to_str = to_str + k + " : " + str(self.__dict__[k]) + "\n"
+            to_str = to_str + k + ": " + \
+                str(self.__dict__[k]).replace(":", "\\:")
+            if x < len(keys)-1:
+                to_str += ", "
+            x += 1
         return to_str
 
     def __repr__(self):
         to_str : str = ""
         keys = get_members(self.__class__.__name__)
         for k in keys:
-            to_str = to_str + k + " : " + str(self.__dict__[k]) + "\n"
+            to_str = to_str + k + " : " + str(self.__dict__[k]).replace(":", "\\:") + "\n"
         return to_str
 
     def populate(self, vals):
@@ -38,8 +43,8 @@ class Tile(Object):
         super().__init__()
         self.passable       : str = "true" # don't use a bool here please, ruby uses lowercase for T/F and strings keep text fields simple
         self.description    : str = ""
-        self.events         : list = [] # TODO: static type check as list[Event]; need Event class
-        self.monsters       : list[Monster] = []
+        self.events         : list = [] # TODO: static type check as List[Event]; need Event class
+        self.monsters       : List[Monster] = []
         self.graphic        : str = None
     
     def get_graphic(self):
@@ -54,11 +59,11 @@ class Monster(Object):
     def __init__(self):
         super().__init__()
         self.name               : str = "Monster"
-        self.stats              : dict[str, int] = {":max_hp" : 1, ":hp" : 1, ":attack" : 1, ":defense" : 1, ":agility" : 1}
-        self.inventory          : list = [] # TODO: static type check as list[Item]; need Item class
+        self.stats              : Dict[str, int] = {":max_hp" : 1, ":hp" : 1, ":attack" : 1, ":defense" : 1, ":agility" : 1}
+        self.inventory          : list = [] # TODO: static type check as List[Item]; need Item class
         self.gold               : int = 0
-        self.battle_commands    : list[Attack] = []
-        self.outfit             : dict = {} # TODO: static type check as list[Item]; need Item class
+        self.battle_commands    : List[Attack] = []
+        self.outfit             : dict = {} # TODO: static type check as Dict[str, Item]; need Item class
 
 class Attack(Object):
     def __init__(self):
@@ -68,6 +73,31 @@ class Attack(Object):
         self.success_rate   : int = 100
         self.target         : str = ":enemy" # Not in the official release of Goby yet, I'm gonna put a pull request in for my changes
 
+class Event(Object):
+    def __init__(self):
+        super().__init__()
+
+class NPC(Event):
+    def __init__(self):
+        super().__init__()
+        self.name       : str = "NPC"
+        self.command    : str = "talk"
+
+class Chest(Event):
+    def __init__(self):
+        super().__init__()
+        self.name       : str  = "Chest"
+        self.command    : str  = "open"
+        self.gold       : int  = 0
+        self.treasures  : list = []
+
+class Shop(Event):
+    def __init__(self):
+        super().__init__()
+        self.name       : str  = "Shop"
+        self.command    : str  = "shop"
+        self.items      : list = []
+
 def get_members(class_name: str) -> List[str]:
     '''
     Returns a list of all member variables in the specified class 
@@ -76,4 +106,11 @@ def get_members(class_name: str) -> List[str]:
     '''
     for name, obj in inspect.getmembers(sys.modules[__name__]):
         if inspect.isclass(obj) and name == class_name:
-            return obj().__dict__.keys()    
+            return obj().__dict__.keys()
+
+def get_classes():
+    return inspect.getmembers(sys.modules[__name__])
+
+
+def get_leaf_classes(cls):
+    return set(cls.__subclasses__()).union([s for c in cls.__subclasses__() for s in get_leaf_classes(c)])

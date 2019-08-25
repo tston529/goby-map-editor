@@ -28,9 +28,9 @@ def map_creator(name: str, x: int, y: int):
     
     # Populate a list of all class types ("game objects," e.g. Tile, Monster, etc.)
     obj_names = []
-    for name, obj in inspect.getmembers(sys.modules[objects.__name__]):
-        if inspect.isclass(obj) and name != "Object":
-            obj_names.append(name)
+    for obj in objects.get_leaf_classes(objects.Object):
+        if len(obj.__subclasses__()) == 0:
+            obj_names.append(obj.__name__)
 
     # Create buttons for game object creation
     create_buttons = []
@@ -68,10 +68,7 @@ def map_creator(name: str, x: int, y: int):
         elif event in (None, 'Save'):
             # TODO: output to yaml or json or something parsable
             # I need to update the __repl__ and __str__ to take advantage of this
-            """ for k, v in obj_types:
-                print """
-            print(obj_types)
-            print(tiles)
+            helper.to_yaml(obj_types, tiles)
 
         # Otherwise, the button is a map tile
         else:
@@ -100,9 +97,33 @@ def create_object(obj_types, obj_type) -> (str, objects.Object):
     '''
 
     layout = []
+
     members = objects.get_members(obj_type)
+   
     for k in members:
-        layout.append([sg.Text("{}: ".format(k)), sg.InputText()])
+        import typing
+        sub_members = [] # will contain a list of all child classes
+        k2 = k[:-1].capitalize()  # converts 'monsters' to 'Monster', etc.
+        x = None
+        for name, obj in objects.get_classes():
+            if inspect.isclass(obj) and name == k2:
+                x = obj
+        if x:
+            class_type = getattr(sys.modules[objects.__name__], k2)
+            leaf_classes = objects.get_leaf_classes(class_type)
+            print(list(leaf_classes))
+            if len(leaf_classes) == 0:
+                sub_members.append(k2)
+            else:
+                for leaf in leaf_classes:
+                    sub_members.append(leaf.__name__)
+            dropdown_list = []
+            for sm in sub_members:
+                if sm in obj_types:
+                    dropdown_list = dropdown_list + [key for key in obj_types[sm].keys()]
+            layout.append([sg.Text("{}: ".format(k)), sg.Combo(dropdown_list)])
+        else:
+            layout.append([sg.Text("{}: ".format(k)), sg.InputText()])
     layout.append([sg.Text("Nickname this {}: ".format(obj_type)), sg.InputText()])
     layout.append([sg.OK(), sg.Cancel()])
 

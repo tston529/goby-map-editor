@@ -14,8 +14,16 @@ I am trying to force static typing in this project, since each class has its own
 
 ## Roadmap
 - [x] Groundwork (base app, basic text fields, etc)  
-- [ ] Export data to JSON or YAML (YAML would be preferred)  
-- [ ] Contextual form fields (dropdown for custom game objects, textfield for others)  
+- [x] Export data to JSON or YAML (YAML would be preferred)  
+- [ ] Contextual form fields (dropdown for custom game objects, textfield for others)   
+    - [x] Textfield forms for most, dropdowns for custom objects
+    - [ ] Handling of lists (multi-select)
+  - [x] Automatic dropdowns for any instances of created game objects, provided the class exists  
+  - [ ] Dictionary support (stats, equipment, etc)
 - [ ] Form field validation  
 - [ ] Support for Item game object  
-- [ ] Support for Event game object  
+- [x] Support for default Event game objects
+  - [x] Chest  
+  - [x] NPC  
+  - [x] Shop
+- [ ] A less cumbersome UX
