@@ -1,5 +1,6 @@
 import PySimpleGUI as sg
 import sys, inspect
+import typing
 import objects as objects
 import helper as helper
 
@@ -101,19 +102,26 @@ def create_object(obj_types, obj_type) -> (str, objects.Object):
     members = objects.get_members(obj_type)
    
     for k in members:
-        import typing
         sub_members = [] # will contain a list of all child classes
         k2 = k[:-1].capitalize()  # converts 'monsters' to 'Monster', etc.
-        x = None
+        instance_of_class = None
+
+        # If the form field is to contain instances of game objects,
+        #   generate a class object of that type
         for name, obj in objects.get_classes():
             if inspect.isclass(obj) and name == k2:
-                x = obj
-        if x:
-            class_type = getattr(sys.modules[objects.__name__], k2)
-            leaf_classes = objects.get_leaf_classes(class_type)
-            print(list(leaf_classes))
+                instance_of_class = obj
+
+        # If the field is to be populated with a selection of game objects
+        if instance_of_class:
+            leaf_classes = objects.get_leaf_classes(instance_of_class)
+            # If it has no children classes, we are going to populate the field 
+            #   with game objects of the found type.
             if len(leaf_classes) == 0:
                 sub_members.append(k2)
+            
+            # Otherwise, find all instances of game objects of the type's
+            #   child classes and populate the dropdown with them instead.
             else:
                 for leaf in leaf_classes:
                     sub_members.append(leaf.__name__)
@@ -138,7 +146,7 @@ def create_object(obj_types, obj_type) -> (str, objects.Object):
             nickname = values[len(values)-1]
             if len(nickname) == 0:
                 sg.Popup("Must provide a nickname for this object.")
-            elif nickname in obj_types:
+            elif nickname in obj_types[obj_type]:
                 sg.Popup("{} already exists as a nickname, choose something else.".format(values[0]))
             else:
                 window.Close()

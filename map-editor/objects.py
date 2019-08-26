@@ -2,6 +2,9 @@ import sys, inspect
 from typing import List, Dict
 
 class Object:
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+
     '''The generic class from which all other game objects inherit'''
     def __str__(self):
         to_str : str = ""
@@ -81,7 +84,7 @@ class NPC(Event):
     def __init__(self):
         super().__init__()
         self.name       : str = "NPC"
-        self.command    : str = "talk"
+        self.commmand   : str = "talk"
 
 class Chest(Event):
     def __init__(self):
@@ -97,6 +100,18 @@ class Shop(Event):
         self.name       : str  = "Shop"
         self.command    : str  = "shop"
         self.items      : list = []
+
+class Item(Object):
+    def __init__(self):
+        super().__init__()
+        
+class Food(Item):
+    def __init__(self):
+        self.name       : str = "Food"
+        self.price      : int = 0
+        self.consumable : str = 'true'
+        self.disposable : str = 'true'
+        self.recovers   : int = 0
 
 def get_members(class_name: str) -> List[str]:
     '''
