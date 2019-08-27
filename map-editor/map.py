@@ -21,24 +21,37 @@ def map_creator(name: str, x: int, y: int):
     layout = []
 
     # Create the buttons for every tile on the map
+    map_frame = []
     for i in range(y):
-        line = []
-        for j in range(x):
-            line.append(sg.RButton("(None)", size=(1,1), key="{},{}".format(i,j)))
-        layout.append(line)
+        line = [sg.RButton("(None)", size=(1,1), key="{},{}".format(i,j)) for j in range(x)]
+        map_frame.append(line)
+    layout.append([sg.Frame('Map', map_frame)])
     
     # Populate a list of all class types ("game objects," e.g. Tile, Monster, etc.)
     obj_names = []
+    new_obj_colors = {}
+    x = objects.inheritors(objects.Object)
     for obj in objects.get_leaf_classes(objects.Object):
-        if len(obj.__subclasses__()) == 0:
-            obj_names.append(obj.__name__)
+        obj_names.append(obj.__name__)
+        if obj.__name__ in x:
+            new_obj_colors[obj.__name__] = "darkred"
+        else:
+            new_obj_colors[obj.__name__] = "darkgreen"
 
     # Create buttons for game object creation
     create_buttons = []
-    for name in obj_names:
-        create_buttons.append(sg.Button("Create {}".format(name)))
+    for clsname in x:
+        row = [sg.Button("New {}".format(clsname), button_color=('white', new_obj_colors[clsname]))]
+        for subclass in objects.inheritors_from_classname(clsname):
+            row.append(sg.Button("New {}".format(subclass), button_color=('white', new_obj_colors[subclass])))
+        create_buttons.append(row)
 
-    layout.append(create_buttons)
+    import six
+    a = map(list, six.moves.zip_longest(*create_buttons, fillvalue=sg.Button('', button_color=('white', "#DADADA"), border_width=0, disabled=True,size=(10,1)) ))
+    
+    new_obj_frame = sg.Frame('', a)
+    layout[0].append(new_obj_frame)
+    print(layout)
     layout.append([sg.Cancel(), sg.Save()])
 
     window = sg.Window('Map Creator: creating {}'.format(name), layout)
@@ -51,9 +64,9 @@ def map_creator(name: str, x: int, y: int):
             break
         
         # One of the create buttons was clicked
-        elif "Create" in str(event):
+        elif "New" in str(event):
             # # Extract the class type from the button text
-            obj_type = str(event).replace("Create ", "")
+            obj_type = str(event).replace("New ", "")
 
             if obj_type not in obj_types:
                 obj_types[obj_type] = {}

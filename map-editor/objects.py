@@ -129,3 +129,11 @@ def get_classes():
 
 def get_leaf_classes(cls):
     return set(cls.__subclasses__()).union([s for c in cls.__subclasses__() for s in get_leaf_classes(c)])
+
+def inheritors(cls):
+    subclasses = [sc.__name__ for sc in cls.__subclasses__()]
+    return subclasses
+
+def inheritors_from_classname(cls):
+    cls = getattr(sys.modules[__name__], cls)
+    return inheritors(cls)

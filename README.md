@@ -22,8 +22,11 @@ I am trying to force static typing in this project, since each class has its own
   - [ ] Dictionary support (stats, equipment, etc)
 - [ ] Form field validation  
 - [ ] Support for Item game object  
+  - [x] Food
+  - [ ] Equipment
+  - [ ] Etc?
 - [x] Support for default Event game objects
   - [x] Chest  
   - [x] NPC  
   - [x] Shop
-- [ ] A less cumbersome UX
+- [ ] A less cumbersome UX (WIP)
