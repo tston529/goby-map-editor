@@ -23,9 +23,9 @@ def map_creator(name: str, x: int, y: int):
     # Create the buttons for every tile on the map
     map_frame = []
     for i in range(y):
-        line = [sg.RButton("(None)", size=(1,1), key="{},{}".format(i,j)) for j in range(x)]
+        line = [sg.RButton("", size=(2,1), key="{},{}".format(i,j)) for j in range(x)]
         map_frame.append(line)
-    layout.append([sg.Frame('Map', map_frame)])
+    layout.append([sg.Frame('Map', map_frame, title_color="white")])
     
     # Populate a list of all class types ("game objects," e.g. Tile, Monster, etc.)
     obj_names = []
@@ -46,10 +46,12 @@ def map_creator(name: str, x: int, y: int):
             row.append(sg.Button("New {}".format(subclass), button_color=('white', new_obj_colors[subclass])))
         create_buttons.append(row)
 
-    import six
-    a = map(list, six.moves.zip_longest(*create_buttons, fillvalue=sg.Button('', button_color=('white', "#DADADA"), border_width=0, disabled=True,size=(10,1)) ))
+    # The following will rotate the buttons to be in a vertical arrangement, which looks nicer in my opinion, but
+    #   there will be a noticable spacing difference caused by a mismatch in all the button's sizes.
+    # import six
+    # create_buttons = map(list, six.moves.zip_longest(*create_buttons, fillvalue=sg.Button('', button_color=('white', "#28283c"), border_width=0, disabled=True,size=(10,1)) ))
     
-    new_obj_frame = sg.Frame('', a)
+    new_obj_frame = sg.Frame('', create_buttons, title_color="white")
     layout[0].append(new_obj_frame)
     print(layout)
     layout.append([sg.Cancel(), sg.Save()])
@@ -77,12 +79,10 @@ def map_creator(name: str, x: int, y: int):
             if new_obj != None: # if user didn't hit cancel
                 obj_types[obj_type][new_obj[0]] = new_obj[1]
 
-        # If the user clicked save, TODO: output to file
-        #   (currently just prints all relevant data to stdout)
+        # If the user clicked save, output to file
         elif event in (None, 'Save'):
-            # TODO: output to yaml or json or something parsable
-            # I need to update the __repl__ and __str__ to take advantage of this
             helper.to_yaml(obj_types, tiles)
+            helper.map_to_csv(name, tiles)
 
         # Otherwise, the button is a map tile
         else:
@@ -138,7 +138,7 @@ def create_object(obj_types, obj_type) -> (str, objects.Object):
             else:
                 for leaf in leaf_classes:
                     sub_members.append(leaf.__name__)
-            dropdown_list = []
+            dropdown_list = [""]
             for sm in sub_members:
                 if sm in obj_types:
                     dropdown_list = dropdown_list + [key for key in obj_types[sm].keys()]
@@ -207,8 +207,20 @@ def choose_obj(obj_types, x=-1, y=-1) -> str:
     return None
 
 def main():
-    layout = [  [sg.Text('Name of map,'), sg.InputText()],
-                [sg.Text('Size of map in number of blocks')],
+    colors = {
+        'BACKGROUND' : '#28283c',
+        'TEXT'       : 'white',
+        'INPUT'      : '#505066'
+    }
+    sg.SetOptions(background_color=colors['BACKGROUND'],
+                text_element_background_color=colors['BACKGROUND'],
+                element_background_color=colors['BACKGROUND'],
+                text_color=colors['TEXT'],
+                input_elements_background_color=colors['INPUT'],
+                input_text_color=colors['TEXT'])
+
+    layout = [[sg.Text('Name of map,'), sg.InputText()],
+                [sg.Text('Size of map in number of blocks:')],
                 [sg.Text('X'), sg.InputText()],
                 [sg.Text('Y'), sg.InputText()],
                 [sg.OK(bind_return_key=True), sg.Cancel()]]

@@ -48,7 +48,7 @@ class Tile(Object):
         self.description    : str = ""
         self.events         : list = [] # TODO: static type check as List[Event]; need Event class
         self.monsters       : List[Monster] = []
-        self.graphic        : str = None
+        self.graphic        : str = ""
     
     def get_graphic(self):
         if self.graphic != None and self.graphic != "":

@@ -14,7 +14,8 @@ I am trying to force static typing in this project, since each class has its own
 
 ## Roadmap
 - [x] Groundwork (base app, basic text fields, etc)  
-- [x] Export data to JSON or YAML (YAML would be preferred)  
+- [x] Export data to JSON or YAML (YAML would be preferred) 
+- [ ] Export map to CSV 
 - [ ] Contextual form fields (dropdown for custom game objects, textfield for others)   
     - [x] Textfield forms for most, dropdowns for custom objects
     - [ ] Handling of lists (multi-select)
@@ -29,4 +30,7 @@ I am trying to force static typing in this project, since each class has its own
   - [x] Chest  
   - [x] NPC  
   - [x] Shop
+- [ ] Edit created object types
+- [ ] Open existing files for editing
 - [ ] A less cumbersome UX (WIP)
+- [ ] Better UI (WIP)
