@@ -1,5 +1,5 @@
 import PySimpleGUI as sg
-import sys, inspect
+import os, sys, inspect
 import typing
 import objects as objects
 import helper as helper
@@ -30,17 +30,17 @@ def map_creator(name: str, x: int, y: int):
     # Populate a list of all class types ("game objects," e.g. Tile, Monster, etc.)
     obj_names = []
     new_obj_colors = {}
-    x = objects.inheritors(objects.Object)
+    inheritor_objs = objects.inheritors(objects.Object)
     for obj in objects.get_leaf_classes(objects.Object):
         obj_names.append(obj.__name__)
-        if obj.__name__ in x:
+        if obj.__name__ in inheritor_objs:
             new_obj_colors[obj.__name__] = "darkred"
         else:
             new_obj_colors[obj.__name__] = "darkgreen"
 
     # Create buttons for game object creation
     create_buttons = []
-    for clsname in x:
+    for clsname in inheritor_objs:
         row = [sg.Button("New {}".format(clsname), button_color=('white', new_obj_colors[clsname]))]
         for subclass in objects.inheritors_from_classname(clsname):
             row.append(sg.Button("New {}".format(subclass), button_color=('white', new_obj_colors[subclass])))
@@ -49,21 +49,43 @@ def map_creator(name: str, x: int, y: int):
     # The following will rotate the buttons to be in a vertical arrangement, which looks nicer in my opinion, but
     #   there will be a noticable spacing difference caused by a mismatch in all the button's sizes.
     # import six
-    # create_buttons = map(list, six.moves.zip_longest(*create_buttons, fillvalue=sg.Button('', button_color=('white', "#28283c"), border_width=0, disabled=True,size=(10,1)) ))
+    # create_buttons = map(list, six.moves.zip_longest(*create_buttons, fillvalue=sg.Button('', button_color=('#28283c', "#28283c"), border_width=0, disabled=True,size=(10,1)) ))
     
     new_obj_frame = sg.Frame('', create_buttons, title_color="white")
     layout[0].append(new_obj_frame)
-    print(layout)
-    layout.append([sg.Cancel(), sg.Save()])
+    
+    map_editor_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # TODO: program flood fill so I can re-enable the bucket button
+    layout.append([sg.Button("", image_filename=map_editor_dir+"/../resources/icons8-pencil-50.png",
+                            key="tool_type_pencil", 
+                            image_size=(25, 25), 
+                            image_subsample=2, 
+                            size=(15,1)),
+                   sg.Button("", image_filename=map_editor_dir+"/../resources/icons8-fill-color-50.png",
+                             key="tool_type_bucket", 
+                             image_size=(25, 25), 
+                             image_subsample=2, 
+                             size=(15, 1), disabled=True),
+                   sg.Combo([""], key="tile_select",
+                            auto_size_text=True, size=(15, 1)),
+                   sg.Button('', button_color=('#28283c', "#28283c"),
+                             border_width=0, disabled=True, size=(5*x, 1)),
+                   sg.Cancel(), sg.Save()])
 
     window = sg.Window('Map Creator: creating {}'.format(name), layout)
 
+    #  Will be used later to fill single cells (pencil) or to flood fill (bucket)
+    tool_type = "pencil"
     while True:
-        event, _ = window.Read()
+        event, values = window.Read()
 
         # User clicked Cancel, so just break out of the loop.
         if event in (None, 'Cancel'):
             break
+
+        elif "tool_type" in str(event):
+            tool_type = str(event).replace("tool_type_", "")
         
         # One of the create buttons was clicked
         elif "New" in str(event):
@@ -78,12 +100,14 @@ def map_creator(name: str, x: int, y: int):
             new_obj = create_object(obj_types, obj_type)
             if new_obj != None: # if user didn't hit cancel
                 obj_types[obj_type][new_obj[0]] = new_obj[1]
+            
+            window.Element("tile_select").Update(values=[""]+[key for key in obj_types["Tile"].keys()])
 
         # If the user clicked save, output to file
         elif event in (None, 'Save'):
             helper.to_yaml(obj_types, tiles)
             helper.map_to_csv(name, tiles)
-
+            sg.Popup("Saved all data! :)", title="Success!")
         # Otherwise, the button is a map tile
         else:
             event_str = str(event).split(",")
@@ -92,14 +116,15 @@ def map_creator(name: str, x: int, y: int):
 
             changed = False
             if "Tile" in obj_types:
-                temp = choose_obj(obj_types["Tile"], x, y)
-                if temp != None: # Need this here in case user hits cancel
-                    tiles[x][y] = temp
-                    changed = True
+                tiles[x][y] = values['tile_select']
+                changed = True
             else:
                 sg.Popup("No tiles available :(\nCreate a tile type or two and try again", title="Error")
             if changed:
-                window.Element(str(event)).Update(obj_types["Tile"][tiles[x][y]].get_graphic())
+                if values['tile_select'] != "":
+                    window.Element(str(event)).Update(obj_types["Tile"][tiles[x][y]].get_graphic())
+                else:
+                    window.Element(str(event)).Update("")
 
 def create_object(obj_types, obj_type) -> (str, objects.Object):
     '''
@@ -172,39 +197,6 @@ def create_object(obj_types, obj_type) -> (str, objects.Object):
                         return (nickname, obj().populate(values))
     window.Close()
 
-def choose_obj(obj_types, x=-1, y=-1) -> str:
-    '''
-    Provides a dropdown selection of all created objects of a specified type
-
-    :param obj_types dict[str]Object a dictionary mapping names of nicknames of created objects to their in-game object data  
-
-    :x int horizontal location in tileset  
-
-    :y int vertical location in tileset 
-
-    :return Returns the nickname of the object type
-    '''
-
-    # Populate a dropdown with all nicknames of objects of the specifed type
-    layout = [[sg.Combo([key for key in obj_types.keys()])]]
-    layout.append([sg.OK(), sg.Cancel()])
-
-    window = None
-    if x >= 0 and y >= 0:
-        window = sg.Window('{} Creator: ({}, {})'.format(list(obj_types.values())[0].__class__.__name__, x, y), layout)
-    else:
-        window = sg.Window('{} Creator'.format(list(obj_types.values())[0].__class__.__name__), layout)
-
-    while True:
-        event, values = window.Read()
-        if event:
-            if event in (None, 'Cancel'):
-                break
-            else:
-                window.Close()
-                return values[0]
-    window.Close()
-    return None
 
 def main():
     colors = {
