@@ -65,10 +65,16 @@ class Monster(Object):
         self.stats              : Dict[str, int] = {":max_hp" : 1, ":hp" : 1, ":attack" : 1, ":defense" : 1, ":agility" : 1}
         self.inventory          : list = [] # TODO: static type check as List[Item]; need Item class
         self.gold               : int = 0
-        self.battle_commands    : List[Attack] = []
+        self.battle_commands    : List[Battle_command] = []
         self.outfit             : dict = {} # TODO: static type check as Dict[str, Item]; need Item class
 
-class Attack(Object):
+
+class Battle_command(Object):
+    def __init__(self):
+        super().__init__()
+        self.name   : str = "BattleCommand"
+
+class Attack(Battle_command):
     def __init__(self):
         super().__init__()
         self.name           : str = "Attack"
@@ -104,6 +110,7 @@ class Shop(Event):
 class Item(Object):
     def __init__(self):
         super().__init__()
+        self.name       : str = "Item"
         
 class Food(Item):
     def __init__(self):
@@ -112,6 +119,53 @@ class Food(Item):
         self.consumable : str = 'true'
         self.disposable : str = 'true'
         self.recovers   : int = 0
+
+class Weapon(Item):
+    def __init__(self):
+        self.name        : str  = "Weapon"
+        self.price       : int  = 0
+        self.consumable  : str  = 'false'
+        self.disposable  : str  = 'true'
+        self.attack      : str  = "Attack"
+        self.type        : str  = ":weapon"
+        self.stat_change : dict = {}
+
+class Shield(Item):
+    def __init__(self):
+        self.name        : str  = "Shield"
+        self.price       : int  = 0
+        self.consumable  : str  = 'false'
+        self.disposable  : str  = 'true'
+        self.type        : str  = ":shield"
+        self.stat_change : dict = {}
+
+class Helmet(Item):
+    def __init__(self):
+        self.name        : str = "Helmet"
+        self.price       : int = 0
+        self.consumable  : str = 'false'
+        self.disposable  : str = 'true'
+        self.type        : str = ":helmet"
+        self.stat_change : dict = {}
+
+class Legs(Item):
+    def __init__(self):
+        self.name        : str = "Legs"
+        self.price       : int = 0
+        self.consumable  : str = 'false'
+        self.disposable  : str = 'true'
+        self.type        : str = ":legs"
+        self.stat_change : dict = {}
+
+class Torso(Item):
+    def __init__(self):
+        self.name        : str = "Torso"
+        self.price       : int = 0
+        self.consumable  : str = 'false'
+        self.disposable  : str = 'true'
+        self.type        : str = ":torso"
+        self.stat_change : dict = {}
+
 
 def get_members(class_name: str) -> List[str]:
     '''

@@ -56,7 +56,6 @@ def map_creator(name: str, x: int, y: int):
     
     map_editor_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # TODO: program flood fill so I can re-enable the bucket button
     layout.append([sg.Button("", image_filename=map_editor_dir+"/../resources/icons8-pencil-50.png",
                             key="tool_type_pencil", 
                             image_size=(25, 25), 
@@ -66,7 +65,7 @@ def map_creator(name: str, x: int, y: int):
                              key="tool_type_bucket", 
                              image_size=(25, 25), 
                              image_subsample=2, 
-                             size=(15, 1), disabled=True),
+                             size=(15, 1)),
                    sg.Combo([""], key="tile_select",
                             auto_size_text=True, size=(15, 1)),
                    sg.Button('', button_color=('#28283c', "#28283c"),
@@ -84,6 +83,7 @@ def map_creator(name: str, x: int, y: int):
         if event in (None, 'Cancel'):
             break
 
+        # Either the pencil or bucket was clicked.
         elif "tool_type" in str(event):
             tool_type = str(event).replace("tool_type_", "")
         
@@ -100,8 +100,8 @@ def map_creator(name: str, x: int, y: int):
             new_obj = create_object(obj_types, obj_type)
             if new_obj != None: # if user didn't hit cancel
                 obj_types[obj_type][new_obj[0]] = new_obj[1]
-            
-            window.Element("tile_select").Update(values=[""]+[key for key in obj_types["Tile"].keys()])
+                if "Tile" in str(event) and "Tile" in obj_types:
+                    window.Element("tile_select").Update(values=[""]+[key for key in obj_types["Tile"].keys()])
 
         # If the user clicked save, output to file
         elif event in (None, 'Save'):
@@ -114,17 +114,55 @@ def map_creator(name: str, x: int, y: int):
             x = int(event_str[0])
             y = int(event_str[1])
 
-            changed = False
             if "Tile" in obj_types:
-                tiles[x][y] = values['tile_select']
-                changed = True
+
+                if tool_type == "pencil":
+                    tiles[x][y] = values['tile_select']
+                    if values['tile_select'] != "":
+                        window.Element(str(event)).Update(obj_types["Tile"][tiles[x][y]].get_graphic())
+                    else:
+                        window.Element(str(event)).Update("")
+
+                elif tool_type == "bucket":
+                    tiles = flood_fill(x, y, tiles, values['tile_select'], tiles[x][y])
+                    for i in range(len(tiles)):
+                        for j in range(len(tiles[0])):
+                            if tiles[i][j]:
+                                window.Element(str("{},{}".format(i, j))).Update(obj_types["Tile"][tiles[i][j]].get_graphic())
+                            else:
+                                window.Element(str("{},{}".format(i, j))).Update('')
             else:
                 sg.Popup("No tiles available :(\nCreate a tile type or two and try again", title="Error")
-            if changed:
-                if values['tile_select'] != "":
-                    window.Element(str(event)).Update(obj_types["Tile"][tiles[x][y]].get_graphic())
-                else:
-                    window.Element(str(event)).Update("")
+                
+
+def flood_fill(x, y, map_tiles, new_tile_type, tile_type_to_fill) -> list:
+    '''
+    Fills in an area of like-tiles with another tile type.
+
+    :param x int the current x location of the tile to potentially fill
+
+    :param y int the current y location of the tile to potentially fill
+
+    :new_tile_type str the type of tile to fill in the area with
+
+    :tile_type_to_fill str the type of tile that is being filled in
+
+    :returns the new state of the map
+    '''
+    if y > len(map_tiles)-1 or y < 0 or x > len(map_tiles[0])-1 or x < 0:
+        return map_tiles
+    if map_tiles[x][y] != tile_type_to_fill:
+        return map_tiles
+    
+    map_tiles[x][y] = new_tile_type
+
+    map_tiles = flood_fill(x + 1, y, map_tiles, new_tile_type, tile_type_to_fill)  # then i can either go south
+    map_tiles = flood_fill(x - 1, y, map_tiles, new_tile_type, tile_type_to_fill)  # or north
+    map_tiles = flood_fill(x, y + 1, map_tiles, new_tile_type, tile_type_to_fill)  # or east
+    map_tiles = flood_fill(x, y - 1, map_tiles, new_tile_type, tile_type_to_fill)  # or west
+
+    return map_tiles
+
 
 def create_object(obj_types, obj_type) -> (str, objects.Object):
     '''
@@ -167,7 +205,8 @@ def create_object(obj_types, obj_type) -> (str, objects.Object):
             for sm in sub_members:
                 if sm in obj_types:
                     dropdown_list = dropdown_list + [key for key in obj_types[sm].keys()]
-            layout.append([sg.Text("{}: ".format(k)), sg.Combo(dropdown_list)])
+            listbox_height = len(dropdown_list) if len(dropdown_list) < 5 else 5
+            layout.append([sg.Text("{}: ".format(k)), sg.Listbox(dropdown_list, size=(15,listbox_height))])
         else:
             layout.append([sg.Text("{}: ".format(k)), sg.InputText()])
     layout.append([sg.Text("Nickname this {}: ".format(obj_type)), sg.InputText()])
