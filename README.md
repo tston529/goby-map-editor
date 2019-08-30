@@ -10,6 +10,9 @@ This project massively takes advantage of Python's metaprogramming features.  Ra
   
 Each class instance is required to have a 'nickname' when being created.  My hope was that when the resulting data gets read in to Goby, it could be used as a key in a map, or something.  Maybe if I went the route of converting the yaml files into actual runnable Ruby constructor calls, they could be variable names. I don't know.  Much like this program, I work very much on-the-fly.
 
+![I'm not colorblind, I swear](resources/screenie.png)
+*A very crude interface from a very crude programmer*
+
 ## Making Changes
 First I strongly recommend perusing the Goby source.  It's not complex so you should be able to get a confidently strong idea of what's going on in an hour or two.  The code under /lib/goby is what we'll be targeting
 
